@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kanban Board</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #74ebd5, #acb6e5);
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #fff;
+    }
+    .board {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 20px;
+    }
+    .column {
+      flex: 1;
+      background: #fefefe;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+      min-height: 300px;
+    }
+    .column h2 {
+      text-align: center;
+      color: #333;
+    }
+    .task {
+      background: #ffffff;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px #aaa;
+      cursor: move;
+      position: relative;
+      transition: transform 0.2s;
+    }
+    .task:hover {
+      transform: scale(1.02);
+    }
+    .delete {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-weight: bold;
+      color: red;
+      cursor: pointer;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      margin-left: 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: bold;
+      color: #fff;
+    }
+    .high { background-color: red; }
+    .medium { background-color: orange; }
+    .low { background-color: green; }
+    .timestamp {
+      font-size: 11px;
+      color: #777;
+      margin-top: 5px;
+    }
+    .controls {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .controls input, .controls select, .controls button {
+      margin: 5px;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    .edit-input {
+      width: 100%;
+      padding: 6px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Kanban Task Board</h1>
+
+  <div class="controls">
+    <input type="text" id="taskInput" placeholder="Enter task..." />
+    <select id="prioritySelect">
+      <option value="High">High</option>
+      <option value="Medium" selected>Medium</option>
+      <option value="Low">Low</option>
+    </select>
+    <button onclick="addTask()">Add Task</button>
+  </div>
+
+  <div class="board" id="board">
+    <div class="column" id="todo" ondragover="allowDrop(event)" ondrop="drop(event)">
+      <h2>To Do</h2>
+    </div>
+    <div class="column" id="inprogress" ondragover="allowDrop(event)" ondrop="drop(event)">
+      <h2>In Progress</h2>
+    </div>
+    <div class="column" id="done" ondragover="allowDrop(event)" ondrop="drop(event)">
+      <h2>Done</h2>
+    </div>
+  </div>
+
+  <script>
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+    function saveTasks() {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function allowDrop(e) {
+      e.preventDefault();
+    }
+
+    function drop(e) {
+      e.preventDefault();
+      const taskId = e.dataTransfer.getData("text");
+      const taskEl = document.querySelector(`[data-id='${taskId}']`);
+      e.currentTarget.appendChild(taskEl);
+
+      const columnId = e.currentTarget.id;
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        task.status = columnId;
+        saveTasks();
+      }
+    }
+
+    function drag(e) {
+      e.dataTransfer.setData("text", e.target.dataset.id);
+    }
+
+    function createTaskElement(task) {
+      const taskEl = document.createElement("div");
+      taskEl.className = "task";
+      taskEl.draggable = true;
+      taskEl.dataset.id = task.id;
+      taskEl.addEventListener("dragstart", drag);
+
+      const contentSpan = document.createElement("span");
+      contentSpan.textContent = task.text;
+      contentSpan.className = "task-content";
+
+      contentSpan.ondblclick = () => {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = contentSpan.textContent;
+        input.className = "edit-input";
+        taskEl.replaceChild(input, contentSpan);
+        input.focus();
+
+        input.onblur = () => {
+          task.text = input.value;
+          contentSpan.textContent = input.value;
+          taskEl.replaceChild(contentSpan, input);
+          saveTasks();
+        };
+
+        input.onkeydown = (e) => {
+          if (e.key === "Enter") input.blur();
+        };
+      };
+
+      const badge = document.createElement("span");
+      badge.className = "badge " + task.priority.toLowerCase();
+      badge.textContent = task.priority;
+
+      const timestamp = document.createElement("div");
+      timestamp.className = "timestamp";
+      timestamp.textContent = new Date(task.timestamp).toLocaleString();
+
+      const del = document.createElement("button");
+      del.className = "delete";
+      del.textContent = "×";
+      del.onclick = () => {
+        tasks = tasks.filter(t => t.id !== task.id);
+        taskEl.remove();
+        saveTasks();
+      };
+
+      taskEl.appendChild(contentSpan);
+      taskEl.appendChild(badge);
+      taskEl.appendChild(timestamp);
+      taskEl.appendChild(del);
+
+      return taskEl;
+    }
+
+    function addTask() {
+      const input = document.getElementById("taskInput");
+      const priority = document.getElementById("prioritySelect").value;
+
+      if (!input.value.trim()) return;
+
+      const task = {
+        id: Date.now().toString(),
+        text: input.value,
+        status: "todo",
+        priority: priority,
+        timestamp: new Date().toISOString()
+      };
+
+      tasks.push(task);
+      saveTasks();
+
+      document.getElementById("todo").appendChild(createTaskElement(task));
+      input.value = "";
+    }
+
+    // Initial load
+    tasks.forEach(task => {
+      const col = document.getElementById(task.status);
+      if (col) col.appendChild(createTaskElement(task));
+    });
+  </script>
+
+</body>
+</html>
