@@ -1,0 +1,84 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(to right, #74ebd5, #acb6e5);
+  margin: 0;
+  padding: 20px;
+}
+h1 {
+  text-align: center;
+  color: #fff;
+}
+.board {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
+}
+.column {
+  flex: 1;
+  background: #fefefe;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #ccc;
+  min-height: 300px;
+}
+.column h2 {
+  text-align: center;
+  color: #333;
+}
+.task {
+  background: #ffffff;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 0 5px #aaa;
+  cursor: move;
+  position: relative;
+  transition: transform 0.2s;
+}
+.task:hover {
+  transform: scale(1.02);
+}
+.delete {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-weight: bold;
+  color: red;
+  cursor: pointer;
+}
+.badge {
+  display: inline-block;
+  padding: 2px 6px;
+  margin-left: 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+}
+.high { background-color: red; }
+.medium { background-color: orange; }
+.low { background-color: green; }
+.timestamp {
+  font-size: 11px;
+  color: #777;
+  margin-top: 5px;
+}
+.controls {
+  text-align: center;
+  margin: 20px 0;
+}
+.controls input, .controls select, .controls button {
+  margin: 5px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+.edit-input {
+  width: 100%;
+  padding: 6px;
+  font-size: 14px;
+}
