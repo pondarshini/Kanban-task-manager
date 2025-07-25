@@ -19,6 +19,7 @@ function drop(e) {
   if (task) {
     task.status = columnId;
     saveTasks();
+    sortTasksInColumn(columnId); // 🔄 Sort after drop
   }
 }
 
@@ -31,6 +32,7 @@ function createTaskElement(task) {
   taskEl.className = "task";
   taskEl.draggable = true;
   taskEl.dataset.id = task.id;
+  taskEl.dataset.priority = task.priority; // 🆕 for sorting
   taskEl.addEventListener("dragstart", drag);
 
   const contentSpan = document.createElement("span");
@@ -99,12 +101,30 @@ function addTask() {
   tasks.push(task);
   saveTasks();
 
-  document.getElementById("todo").appendChild(createTaskElement(task));
+  const col = document.getElementById("todo");
+  col.appendChild(createTaskElement(task));
+  sortTasksInColumn("todo"); // 🔄 Auto-sort new task
   input.value = "";
 }
 
-// Initial load
+// 🆕 Sort by priority after adding/dropping
+function sortTasksInColumn(columnId) {
+  const column = document.getElementById(columnId);
+  const priorityOrder = { "High": 1, "Medium": 2, "Low": 3 };
+
+  const taskElements = Array.from(column.querySelectorAll(".task"));
+  taskElements.sort((a, b) => {
+    const p1 = priorityOrder[a.dataset.priority] || 3;
+    const p2 = priorityOrder[b.dataset.priority] || 3;
+    return p1 - p2;
+  });
+
+  taskElements.forEach(task => column.appendChild(task)); // Reorder DOM
+}
+
+// Initial load with sorting
 tasks.forEach(task => {
   const col = document.getElementById(task.status);
   if (col) col.appendChild(createTaskElement(task));
 });
+["todo", "inprogress", "done"].forEach(sortTasksInColumn); // Initial sort
